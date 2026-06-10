@@ -25,6 +25,7 @@ export interface TastingNote {
   likes_count: number;
   comments_count: number;
   liked_by_me: boolean;
+  favorited_by_me: boolean;
 }
 
 export interface NotePayload {

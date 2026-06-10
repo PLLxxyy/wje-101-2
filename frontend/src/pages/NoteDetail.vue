@@ -15,6 +15,13 @@
             <el-button :icon="Heart" :type="note.liked_by_me ? 'primary' : 'default'" @click="toggleLike">
               {{ note.likes_count }}
             </el-button>
+            <el-button
+              :icon="Star"
+              :type="note.favorited_by_me ? 'warning' : 'default'"
+              @click="toggleFavorite"
+            >
+              收藏
+            </el-button>
             <el-button v-if="canModify" :icon="Pencil" @click="openEdit">编辑</el-button>
             <el-button v-if="canModify" :icon="Trash2" type="danger" plain @click="removeNote">删除</el-button>
           </div>
@@ -93,11 +100,22 @@
 <script setup lang="ts">
 import * as echarts from "echarts";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { Heart, Pencil, Send, Trash2 } from "lucide-vue-next";
+import { Heart, Pencil, Send, Star, Trash2 } from "lucide-vue-next";
 import { computed, nextTick, onMounted, reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
-import { createComment, deleteComment, deleteNote, getNote, likeNote, listComments, unlikeNote, updateNote } from "@/api/note";
+import {
+  createComment,
+  deleteComment,
+  deleteNote,
+  favoriteNote,
+  getNote,
+  likeNote,
+  listComments,
+  unfavoriteNote,
+  unlikeNote,
+  updateNote
+} from "@/api/note";
 import EmptyState from "@/components/common/EmptyState.vue";
 import FlavorTags from "@/components/common/FlavorTags.vue";
 import ScoreStars from "@/components/common/ScoreStars.vue";
@@ -190,6 +208,23 @@ async function toggleLike(): Promise<void> {
     await likeNote(note.value.id);
     note.value.likes_count += 1;
     note.value.liked_by_me = true;
+  }
+}
+
+async function toggleFavorite(): Promise<void> {
+  if (!note.value) {
+    return;
+  }
+  if (!userStore.isLoggedIn) {
+    await router.push("/login");
+    return;
+  }
+  if (note.value.favorited_by_me) {
+    await unfavoriteNote(note.value.id);
+    note.value.favorited_by_me = false;
+  } else {
+    await favoriteNote(note.value.id);
+    note.value.favorited_by_me = true;
   }
 }
 

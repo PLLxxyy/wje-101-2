@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.controllers import user_controller
@@ -60,4 +60,17 @@ async def unfollow_user(
 ):
     await user_service.unfollow_user(session, current_user.id, user_id)
     return success_response({"following": False}, "已取消关注")
+
+
+@router.get("/{user_id}/favorites")
+async def user_favorites(
+    user_id: int,
+    page: int = Query(default=1, ge=1),
+    page_size: int = Query(default=10, ge=1, le=50),
+    session: AsyncSession = Depends(get_session),
+    current_user: User | None = Depends(optional_user),
+):
+    return success_response(
+        await user_controller.list_user_favorites(session, user_id, page, page_size, current_user)
+    )
 

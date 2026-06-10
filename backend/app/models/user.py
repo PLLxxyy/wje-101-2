@@ -22,6 +22,7 @@ class User(Base):
     recipes = relationship("BrewRecipe", back_populates="user", cascade="all, delete-orphan")
     comments = relationship("Comment", back_populates="user", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="user", cascade="all, delete-orphan")
+    favorites = relationship("Favorite", back_populates="user", cascade="all, delete-orphan")
 
 
 class UserFollow(Base):

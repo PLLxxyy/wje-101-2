@@ -1,5 +1,6 @@
 import request from "@/utils/request";
-import type { ApiResponse } from "@/types/api";
+import type { ApiResponse, PaginatedResponse } from "@/types/api";
+import type { TastingNote } from "@/types/note";
 import type { AuthToken, User, UserProfile } from "@/types/user";
 
 export interface RegisterPayload {
@@ -60,6 +61,22 @@ export async function followUser(userId: number): Promise<{ following: boolean }
 
 export async function unfollowUser(userId: number): Promise<{ following: boolean }> {
   const response = await request.delete<unknown, ApiResponse<{ following: boolean }>>(`/users/${userId}/follow`);
+  return response.data;
+}
+
+export interface UserFavoritesParams {
+  page?: number;
+  page_size?: number;
+}
+
+export async function getUserFavorites(
+  userId: number,
+  params: UserFavoritesParams = {}
+): Promise<PaginatedResponse<TastingNote>> {
+  const response = await request.get<unknown, ApiResponse<PaginatedResponse<TastingNote>>>(
+    `/users/${userId}/favorites`,
+    { params }
+  );
   return response.data;
 }
 

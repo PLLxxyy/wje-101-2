@@ -90,3 +90,21 @@ async def unlike_note(
     await note_service.unlike_note(session, note_id, current_user.id)
     return success_response({"liked": False}, "已取消点赞")
 
+
+@router.post("/{note_id}/favorite")
+async def favorite_note(
+    note_id: int, session: AsyncSession = Depends(get_session), current_user: User = Depends(require_auth)
+):
+    await note_service.favorite_note(session, note_id, current_user.id)
+    return success_response({"favorited": True}, "已收藏")
+
+
+@router.delete("/{note_id}/favorite")
+async def unfavorite_note(
+    note_id: int,
+    session: AsyncSession = Depends(get_session),
+    current_user: User = Depends(require_auth),
+):
+    await note_service.unfavorite_note(session, note_id, current_user.id)
+    return success_response({"favorited": False}, "已取消收藏")
+

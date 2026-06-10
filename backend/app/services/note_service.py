@@ -3,7 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from app.models.comment import Comment
-from app.models.note import Like, TastingNote
+from app.models.note import Favorite, Like, TastingNote
 from app.models.recipe import BrewRecipe
 from app.models.user import User
 from app.types.enums import UserRole
@@ -93,6 +93,44 @@ async def unlike_note(session: AsyncSession, note_id: int, user_id: int) -> bool
     return True
 
 
+async def favorite_note(session: AsyncSession, note_id: int, user_id: int) -> bool:
+    note = await session.get(TastingNote, note_id)
+    if note is None:
+        return False
+    existing = await session.execute(select(Favorite).where(and_(Favorite.note_id == note_id, Favorite.user_id == user_id)))
+    if existing.scalar_one_or_none() is None:
+        session.add(Favorite(note_id=note_id, user_id=user_id))
+        await session.commit()
+    return True
+
+
+async def unfavorite_note(session: AsyncSession, note_id: int, user_id: int) -> bool:
+    await session.execute(delete(Favorite).where(and_(Favorite.note_id == note_id, Favorite.user_id == user_id)))
+    await session.commit()
+    return True
+
+
+async def list_favorites(
+    session: AsyncSession,
+    user_id: int,
+    page: int,
+    page_size: int,
+    current_user_id: int | None = None,
+) -> PaginatedNotes:
+    total = await session.scalar(
+        select(func.count()).select_from(Favorite).where(Favorite.user_id == user_id)
+    )
+    statement = (
+        _note_query()
+        .join(Favorite, Favorite.note_id == TastingNote.id)
+        .where(Favorite.user_id == user_id)
+        .order_by(Favorite.created_at.desc())
+    )
+    result = await session.execute(statement.offset((page - 1) * page_size).limit(page_size))
+    items = [await _note_out(session, note, current_user_id) for note in result.scalars().all()]
+    return PaginatedNotes(items=items, total=int(total or 0), page=page, page_size=page_size)
+
+
 def _note_conditions(roast_level: str | None, origin: str | None, user_id: int | None, search: str | None):
     conditions = []
     if roast_level:
@@ -117,13 +155,17 @@ async def _note_out(session: AsyncSession, note: TastingNote, current_user_id: i
     like_count = await session.scalar(select(func.count()).select_from(Like).where(Like.note_id == note.id))
     comment_count = await session.scalar(select(func.count()).select_from(Comment).where(Comment.note_id == note.id))
     liked = False
+    favorited = False
     if current_user_id:
         liked_query = select(Like).where(and_(Like.note_id == note.id, Like.user_id == current_user_id))
         liked = (await session.execute(liked_query)).scalar_one_or_none() is not None
+        favorited_query = select(Favorite).where(and_(Favorite.note_id == note.id, Favorite.user_id == current_user_id))
+        favorited = (await session.execute(favorited_query)).scalar_one_or_none() is not None
     base = NoteOut.model_validate(note)
     base.likes_count = int(like_count or 0)
     base.comments_count = int(comment_count or 0)
     base.liked_by_me = liked
+    base.favorited_by_me = favorited
     return base
 
 

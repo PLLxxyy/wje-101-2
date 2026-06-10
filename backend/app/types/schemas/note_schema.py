@@ -55,6 +55,7 @@ class NoteOut(NoteBase):
     likes_count: int = 0
     comments_count: int = 0
     liked_by_me: bool = False
+    favorited_by_me: bool = False
 
 
 class PaginatedNotes(BaseModel):

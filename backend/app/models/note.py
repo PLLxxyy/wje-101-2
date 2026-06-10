@@ -31,6 +31,7 @@ class TastingNote(Base):
     brew_recipe = relationship("BrewRecipe", back_populates="notes")
     comments = relationship("Comment", back_populates="note", cascade="all, delete-orphan")
     likes = relationship("Like", back_populates="note", cascade="all, delete-orphan")
+    favorites = relationship("Favorite", back_populates="note", cascade="all, delete-orphan")
 
 
 class Like(Base):
@@ -44,4 +45,17 @@ class Like(Base):
 
     user = relationship("User", back_populates="likes")
     note = relationship("TastingNote", back_populates="likes")
+
+
+class Favorite(Base):
+    __tablename__ = "favorites"
+    __table_args__ = (UniqueConstraint("user_id", "note_id", name="uq_user_note_favorite"),)
+
+    id: Mapped[int] = mapped_column(primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id", ondelete="CASCADE"), index=True)
+    note_id: Mapped[int] = mapped_column(ForeignKey("tasting_notes.id", ondelete="CASCADE"), index=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    user = relationship("User", back_populates="favorites")
+    note = relationship("TastingNote", back_populates="favorites")
 

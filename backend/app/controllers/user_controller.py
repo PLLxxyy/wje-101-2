@@ -2,8 +2,9 @@ from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.user import User
-from app.services import user_service
+from app.services import note_service, user_service
 from app.types.enums import UserRole
+from app.types.schemas.note_schema import PaginatedNotes
 from app.types.schemas.user_schema import UserProfile, UserPublic, UserUpdate
 
 
@@ -33,4 +34,15 @@ async def delete_user(session: AsyncSession, user_id: int) -> bool:
     if not deleted:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
     return deleted
+
+
+async def list_user_favorites(
+    session: AsyncSession,
+    user_id: int,
+    page: int,
+    page_size: int,
+    current_user: User | None,
+) -> PaginatedNotes:
+    current_id = current_user.id if current_user else None
+    return await note_service.list_favorites(session, user_id, page, page_size, current_id)
 

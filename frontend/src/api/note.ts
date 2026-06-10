@@ -51,6 +51,16 @@ export async function unlikeNote(noteId: number): Promise<{ liked: boolean }> {
   return response.data;
 }
 
+export async function favoriteNote(noteId: number): Promise<{ favorited: boolean }> {
+  const response = await request.post<unknown, ApiResponse<{ favorited: boolean }>>(`/notes/${noteId}/favorite`);
+  return response.data;
+}
+
+export async function unfavoriteNote(noteId: number): Promise<{ favorited: boolean }> {
+  const response = await request.delete<unknown, ApiResponse<{ favorited: boolean }>>(`/notes/${noteId}/favorite`);
+  return response.data;
+}
+
 export async function listComments(noteId: number): Promise<Comment[]> {
   const response = await request.get<unknown, ApiResponse<Comment[]>>(`/notes/${noteId}/comments`);
   return response.data;
