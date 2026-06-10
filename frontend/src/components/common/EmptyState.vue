@@ -7,12 +7,12 @@
 </template>
 
 <script setup lang="ts">
-import { Bean, Coffee, NotebookText } from "lucide-vue-next";
+import { Bean, Coffee, NotebookText, Star } from "lucide-vue-next";
 import { computed } from "vue";
 
 const props = withDefaults(
   defineProps<{
-    icon?: "coffee" | "bean" | "note";
+    icon?: "coffee" | "bean" | "note" | "star";
     title: string;
     description: string;
   }>(),
@@ -27,6 +27,9 @@ const iconComponent = computed(() => {
   }
   if (props.icon === "note") {
     return NotebookText;
+  }
+  if (props.icon === "star") {
+    return Star;
   }
   return Coffee;
 });
